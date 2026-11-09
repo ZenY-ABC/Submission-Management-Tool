@@ -5,8 +5,16 @@ function isSeven(s){const t=s.replace(/[０-９]/g,c=>String(c.charCodeAt(0)-652
 function tab(v){current=v;document.getElementById('tasksBtn').classList.toggle('active',v==='tasks');document.getElementById('testsBtn').classList.toggle('active',v==='tests');render()}
 function render(){const items=data.filter(x=>x.type===current).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));document.getElementById('count').textContent=`未完了 ${data.filter(x=>x.type==='tasks'&&!x.done).length}件`;document.getElementById('items').innerHTML=items.length?items.map(x=>`<div class="item"><label>${x.type==='tasks'?`<input type="checkbox" ${x.done?'checked':''} onchange="toggle('${x.id}')">`:'📄'}<div><strong>${esc(x.title)}</strong><div class="meta">${esc(x.due?'期限 '+x.due:'期限未確認')} · ${esc(x.source)}</div>${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">元メール</a>`:''}<div><button style="background:#eef0f6;color:#334;font-size:12px;margin-top:8px" onclick="removeItem('${x.id}')">削除</button></div></div></label></div>`).join(''):'<p class="muted">まだ登録がありません。</p>'}
 function toggle(id){const x=data.find(x=>x.id===id);if(x){x.done=!x.done;save();render()}}function removeItem(id){data=data.filter(x=>x.id!==id);save();render()}
-function classify(raw){const test=raw.includes('この課題はデジタル採点支援システムを使用した');const due=raw.match(/(?:提出期限|提出締切|締め切り|締切|期限)[:：\s]*([^\n。]{1,35})/)?.[1]||'';if(!test && !/(提出|提出期限|締切|〆切|課題|宿題|やり直し|自己採点|提出してください|提出すること)/.test(raw)){
-  return null;
+
+function classify(raw){
+  const test = raw.includes('この課題はデジタル採点支援システムを使用した');
+  const due = raw.match(/(?:提出期限|提出締切|締め切り|締切|期限)[:：\s]*([^\n。]{1,35})/)?.[1] || '';
+
+  if (!test && !/(提出|提出期限|締切|〆切|課題|宿題|やり直し|自己採点|提出してください|提出すること)/.test(raw)){
+    return null;
+  }
+
+  return {type: test ? 'tests' : 'tasks', due};
 }
 function add(){const raw=document.getElementById('mail').value.trim(),status=document.getElementById('status');if(!raw){status.textContent='メール本文を入力してください';return}if(!isSeven(raw)){status.textContent='7組対象と確認できませんでした。7組の記載がある通知のみ自動登録します。';return}const result=classify(raw);
 if(!result){
