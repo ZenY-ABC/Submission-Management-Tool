@@ -5,6 +5,62 @@ function isSeven(s){const t=s.replace(/[０-９]/g,c=>String(c.charCodeAt(0)-652
 function tab(v){current=v;document.getElementById('tasksBtn').classList.toggle('active',v==='tasks');document.getElementById('testsBtn').classList.toggle('active',v==='tests');render()}
 let selectedIds = new Set();
 
+const SUBJECTS = [
+  '数学Ⅰ', '数学A', '英語CⅠ', '論理表現Ⅰ',
+  '現代の国語', '言語文化', '生物基礎',
+  '化学基礎', '物理基礎', '地理総合',
+  '歴史総合', '保健', '家庭基礎', 'アンデレⅠ'
+];
+
+let testFilters = {
+  term: 'all',
+  exam: 'all',
+  subject: 'all'
+};
+
+function detectSubject(text){
+  const aliases = {
+    '数学Ⅰ': ['数学Ⅰ','数学I','数学1','数Ⅰ','数I'],
+    '数学A': ['数学A','数A'],
+    '英語CⅠ': ['英語CⅠ','英語CI','英語C1','コミュニケーション英語'],
+    '論理表現Ⅰ': ['論理表現Ⅰ','論理表現I','論理表現1','論表'],
+    '現代の国語': ['現代の国語','現国'],
+    '言語文化': ['言語文化','言文'],
+    '生物基礎': ['生物基礎','生基'],
+    '化学基礎': ['化学基礎','化基'],
+    '物理基礎': ['物理基礎','物基'],
+    '地理総合': ['地理総合','地総'],
+    '歴史総合': ['歴史総合','歴総'],
+    '保健': ['保健'],
+    '家庭基礎': ['家庭基礎','家庭科'],
+    'アンデレⅠ': ['アンデレⅠ','アンデレI','アンデレ1']
+  };
+
+  for(const [subject,names] of Object.entries(aliases)){
+    if(names.some(name=>text.includes(name))) return subject;
+  }
+  return '未分類';
+}
+
+function detectExam(text){
+  const normalized = text
+    .replace(/[０-９]/g,c=>String(c.charCodeAt(0)-65248))
+    .replace(/\s+/g,'');
+
+  const termMatch = normalized.match(/([123])学期/);
+  const term = termMatch ? termMatch[1] : 'unknown';
+
+  let exam = 'unknown';
+
+  if(/中間|中間考査|中間試験/.test(normalized)){
+    exam = 'mid';
+  }else if(/期末|期末考査|期末試験/.test(normalized)){
+    exam = 'final';
+  }
+
+  return {term,exam};
+}
+
 function render(){
   const items = data.filter(x=>x.type===current)
     .sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
@@ -85,7 +141,12 @@ function classify(raw){
   )?.[1] || '';
 
   if(test){
-    return {type:'tests',due};
+    return {
+  type:'tests',
+  due,
+  subject:detectSubject(raw),
+  ...detectExam(raw)
+};
   }
 
   const isAssignment =
@@ -102,7 +163,7 @@ if(!result){
   status.textContent='提出物・テスト返却ではないため追加しませんでした。';
   return;
 }
-const {type,due}=result;const title=raw.split('\n').find(s=>s.trim())?.slice(0,140)||'名称未確認';if(data.some(x=>x.title===title&&x.type===type)){status.textContent='同じ名前の通知が登録済みです';return}data.push({id:crypto.randomUUID(),type,title,due,source:'手動取り込み',done:false});save();render();status.textContent=type==='tests'?'テスト返却として追加しました':'提出物候補として追加しました。内容を確認してください。';document.getElementById('mail').value=''}
+const {type,due,subject,term,exam}=result;const title=raw.split('\n').find(s=>s.trim())?.slice(0,140)||'名称未確認';if(data.some(x=>x.title===title&&x.type===type)){status.textContent='同じ名前の通知が登録済みです';return}data.push({id:crypto.randomUUID(),type,title,due,source:'手動取り込み',done:false});save();render();status.textContent=type==='tests'?'テスト返却として追加しました':'提出物候補として追加しました。内容を確認してください。';document.getElementById('mail').value=''}
 function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='classhub-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}async function importData(e){const f=e.target.files[0];if(!f)return;try{const a=JSON.parse(await f.text());if(!Array.isArray(a)||!a.every(x=>typeof x.id==='string'&&['tasks','tests'].includes(x.type)&&typeof x.title==='string'))throw Error();data=a;save();render();document.getElementById('status').textContent='復元しました'}catch{document.getElementById('status').textContent='バックアップの形式が正しくありません'}}
 let accessToken=null;
 function gmailLogin(){const s=document.getElementById('gmailStatus');if(!window.google?.accounts?.oauth2){s.textContent='Google認証を読み込み中です。少し待って再試行してください。';return}google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:'https://www.googleapis.com/auth/gmail.readonly',callback:r=>{if(r.error){s.textContent='認証エラー: '+r.error;return}accessToken=r.access_token;s.textContent='ログインできました。「Gmailから取得」を押してください。'}}).requestAccessToken({prompt:'consent'})}
