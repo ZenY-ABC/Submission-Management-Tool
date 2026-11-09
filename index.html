@@ -87,13 +87,13 @@ function render(){
 <option value="3" ${testFilters.term==='3'?'selected':''}>3学期</option>
     </select>
     <select onchange="testFilters.exam=this.value;render()">
-      <option value="all">全試験</option>
-      <option value="mid">中間考査</option>
-      <option value="final">期末考査</option>
+      <option value="all" ${testFilters.exam==='all'?'selected':''}>全試験</option>
+<option value="mid" ${testFilters.exam==='mid'?'selected':''}>中間考査</option>
+<option value="final" ${testFilters.exam==='final'?'selected':''}>期末考査</option>
     </select>
     <select onchange="testFilters.subject=this.value;render()">
-      <option value="all">全科目</option>
-      ${SUBJECTS.map(s=>`<option value="${s}">${s}</option>`).join('')}
+      <option value="all" ${testFilters.subject==='all'?'selected':''}>全科目</option>
+${SUBJECTS.map(s=>`<option value="${s}" ${testFilters.subject===s?'selected':''}>${s}</option>`).join('')}
     </select>
   </div>
 ` : ''}
