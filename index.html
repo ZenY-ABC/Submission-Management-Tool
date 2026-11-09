@@ -79,7 +79,7 @@ function render(){
 
   document.getElementById('items').innerHTML = `
   ${current==='tests' ? `
-  <div class="bar">
+  <div class="bar" style="justify-content:flex-start;gap:6px;padding-left:0;margin-left:0">
     <select onchange="testFilters.term=this.value;render()" value="${testFilters.term}">
       <option value="all" ${testFilters.term==='all'?'selected':''}>全学期</option>
       <option value="1" ${testFilters.term==='1'?'selected':''}>1学期</option>
