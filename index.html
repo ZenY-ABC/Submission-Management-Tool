@@ -62,7 +62,14 @@ function detectExam(text){
 }
 
 function render(){
-  const items = data.filter(x=>x.type===current)
+  const items = data.filter(x=>
+  x.type===current &&
+  (current!=='tests' || (
+    (testFilters.term==='all' || x.term===testFilters.term) &&
+    (testFilters.exam==='all' || x.exam===testFilters.exam) &&
+    (testFilters.subject==='all' || x.subject===testFilters.subject)
+  ))
+)
     .sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
 
   document.getElementById('count').textContent =
@@ -71,6 +78,25 @@ function render(){
   const selectedCount = items.filter(x=>selectedIds.has(x.id)).length;
 
   document.getElementById('items').innerHTML = `
+  ${current==='tests' ? `
+  <div class="bar">
+    <select onchange="testFilters.term=this.value;render()" value="${testFilters.term}">
+      <option value="all" ${testFilters.term==='all'?'selected':''}>全学期</option>
+      <option value="1" ${testFilters.term==='1'?'selected':''}>1学期</option>
+<option value="2" ${testFilters.term==='2'?'selected':''}>2学期</option>
+<option value="3" ${testFilters.term==='3'?'selected':''}>3学期</option>
+    </select>
+    <select onchange="testFilters.exam=this.value;render()">
+      <option value="all">全試験</option>
+      <option value="mid">中間考査</option>
+      <option value="final">期末考査</option>
+    </select>
+    <select onchange="testFilters.subject=this.value;render()">
+      <option value="all">全科目</option>
+      ${SUBJECTS.map(s=>`<option value="${s}">${s}</option>`).join('')}
+    </select>
+  </div>
+` : ''}
     <div class="bar" style="margin:16px 0">
       <span>削除対象：${selectedCount}件</span>
       <button onclick="deleteSelected()" ${selectedCount===0?'disabled':''}>
