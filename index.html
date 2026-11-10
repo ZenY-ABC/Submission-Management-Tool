@@ -162,9 +162,10 @@ function toggle(id){const x=data.find(x=>x.id===id);if(x){x.done=!x.done;save();
 function classify(raw){
   const test = raw.includes('この課題はデジタル採点支援システムを使用した');
 
-  const due = raw.match(
-    /(?:提出期限|提出締切|締め切り|締切|期限)[:：\s]*([^\n。]{1,35})/
-  )?.[1] || '';
+const due =
+  raw.match(/(?:提出期限|提出締切|締め切り|締切|期限)[：:\s]*([^\n。]{1,35})/)?.[1]?.trim().match(/^(?!未定|なし|不明|未設定)/)?.input
+  || raw.match(/(?:\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2})(?:\s*[（(]?[月火水木金土日][）)]?)?(?:\s*\d{1,2}時(?:\d{1,2}分)?)?\s*まで/)?.[0]
+  || '';
 
   if(test){
     return {
