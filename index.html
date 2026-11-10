@@ -182,6 +182,9 @@ function classify(raw){
     return null;
   }
 
+if(!due.trim()){
+  return null;
+}
   return {type:'tasks',due};
 }
 function add(){const raw=document.getElementById('mail').value.trim(),status=document.getElementById('status');if(!raw){status.textContent='メール本文を入力してください';return}if(!isSeven(raw)){status.textContent='7組対象と確認できませんでした。7組の記載がある通知のみ自動登録します。';return}const result=classify(raw);
